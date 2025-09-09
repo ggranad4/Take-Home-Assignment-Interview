@@ -1,3 +1,5 @@
+const shots = ["rock", "paper", "scissors"];
+
 exports.name = "custom";
 const counterMoves = {
   scissors: "rock",
@@ -5,7 +7,13 @@ const counterMoves = {
   paper: "scissors",
 };
 const histories = {};
-let constantPlayer = {};
+let randomPlayerId = "";
+let constantPlayerChoice = "";
+const findRandomPlayer = (playerId) => {
+  if (histories[playerId].size > 1) {
+    randomPlayerId = playerId;
+  }
+};
 
 exports.recordShot = (playerId, shot) => {
   if (!histories[playerId]) {
@@ -13,14 +21,15 @@ exports.recordShot = (playerId, shot) => {
     histories[playerId].add(shot);
   }
   histories[playerId].add(shot);
-  if (histories[playerId].size > 1) {
-    constantPlayer[playerId] = shot;
+  findRandomPlayer(playerId, shot);
+  if (randomPlayerId !== playerId) {
+    constantPlayerChoice = shot;
   }
 };
 
 exports.makeShot = (playerId) => {
-  if (constantPlayer[playerId]) {
-    return counterMoves[constantPlayer[playerId]];
+  if (randomPlayerId !== playerId && constantPlayerChoice) {
+    return counterMoves[constantPlayerChoice];
   }
-  return "foo";
+  return shots[Math.floor(Math.random() * shots.length)];
 };
