@@ -45,38 +45,71 @@ function makeDatabaseRequest(pathname, callback) {
 // attempt anohter split??? idk
 // we have the index, the parameter for some reason is passing known length so we know the size of the array
 // lets split the known Length in half. Check the start of that and check if we are at least above it
+async function returnDatabaseRequest(index) {
+  return new Promise((resolve) =>
+    makeDatabaseRequest(`/query?index=${index}`, (data) => {
+      resolve(data);
+    })
+  );
+}
 async function doesTimestampExisitInList(knownLength, position) {
   const lastItemIndex = knownLength - 1;
-  makeDatabaseRequest(`/query?index=${lastItemIndex}`),
-    (data) => {
-      const { result } = data;
-      if (position <= result.end) {
-        return true;
-      }
-      return false;
-    };
-  return isItHere;
+  const data = await returnDatabaseRequest(lastItemIndex);
+  const { result } = data;
+  return position <= result.end;
 }
-async function findSegment(res, knownLength, position) {
-  function tryNext(index) {
-    makeDatabaseRequest(`/query?index=${index}`, (data) => {
-      const { result } = data;
-      if (result.start <= position && position <= result.end) {
-        return sendJSONResponse(res, 200, data);
-      }
-      tryNext(index + 1);
-    });
+
+async function binarySearch(startIndex, endIndex, position) {
+  // 0, 2000
+  if (startIndex > endIndex) {
+    return startIndex;
   }
+  const middleIndex = Math.floor((startIndex + endIndex) / 2);
+  // 1000
+  const data = await returnDatabaseRequest(middleIndex);
+  const { result } = data;
+  if (!result) {
+    console.log("Did i hit here???", middleIndex);
+    return null;
+  }
+  if (position >= result.start && position <= result.end) {
+    return middleIndex;
+  }
+  if (position > result.end) {
+    return binarySearch(middleIndex + 1, endIndex, position);
+  } else {
+    return binarySearch(startIndex, middleIndex - 1, position);
+  }
+}
+
+async function findSegment(res, knownLength, position) {
   // starting at zero every time is wild
   // having the knownlength you can check the half mark...
   // but how can i check and not actuall run the try next?
   // we should check if its even in the list before goign through this search
-  const isTimestampInList = await doesTimestampExisitInList(
-    knownLength,
-    position
-  );
-  if (isTimestampInList) {
-    tryNext(0);
+  // but idk if this is needed since we always know its 2000
+  async function tryNext(index) {
+    const data = await returnDatabaseRequest(index);
+    const { result } = data;
+    console.log("I AM HERE", result);
+    if (!result) {
+      return null;
+    } // end of list
+    if (position >= result.start && position <= result.end) {
+      return data; // found
+    }
+    return tryNext(index + 1);
+  }
+  // const isTimestampInList = await doesTimestampExisitInList(
+  //   knownLength,
+  //   position
+  // );
+  // if (isTimestampInList) {
+  const indexToStart = await binarySearch(0, knownLength - 1, position);
+  if (indexToStart !== null) {
+    const result = await tryNext(indexToStart);
+    if (result) sendJSONResponse(res, 200, result);
+    // }
   }
 }
 
