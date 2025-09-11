@@ -100,16 +100,16 @@ async function findSegment(res, knownLength, position) {
     }
     return tryNext(index + 1);
   }
-  // const isTimestampInList = await doesTimestampExisitInList(
-  //   knownLength,
-  //   position
-  // );
-  // if (isTimestampInList) {
-  const indexToStart = await binarySearch(0, knownLength - 1, position);
-  if (indexToStart !== null) {
-    const result = await tryNext(indexToStart);
-    if (result) sendJSONResponse(res, 200, result);
-    // }
+  const isTimestampInList = await doesTimestampExisitInList(
+    knownLength,
+    position
+  );
+  if (isTimestampInList) {
+    const indexToStart = await binarySearch(0, knownLength - 1, position);
+    if (indexToStart !== null) {
+      const result = await tryNext(indexToStart);
+      if (result) sendJSONResponse(res, 200, result);
+    }
   }
 }
 
