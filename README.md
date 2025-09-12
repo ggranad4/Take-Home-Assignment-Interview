@@ -1,106 +1,17 @@
-# HLS Streaming / JavaScript Debugging Exercises
-There are 4 potential problems to choose from. There are two General Programming Problems, and 2 Video Player Debugging problems. All problems are very much focused on JavaScript programming. The General Programming Problems run in the Node.js environment, while the Video Player Debugging Problems run in the Chrome web browser from a Node.js server.
-
-## General Programmer Problems
-Run in the Node.js environment.
-
-### Installation
-The only dependency is the Node.js runtime. There are no npm dependencies to install (unless you choose to add some).
-
 ### Rock Paper Scissors
-This is a "distributed" game between multiple peers (nodes). By default there are 3 nodes. Each node is created by running the `rock-paper-scissors/player.js` script in a console. A port and strategy should be chosen for each node when you start it up.
 
-To get started, open 3 terminal instances and execute the script in each one. The first command line argument is the port number, and the second command line argument is the game strategy to use. The first port must be 9001, the second 9002, and the third 9003. The strategies must be one of "random", "constant", or "custom". By default, the custom strategy uses a non standard game play, and thereby it always loses.
+My approach was at first to see if a player was sending the same shot over and over again. My frst thought was to create a checker on histories using .every( shot => shot === history[playerId][0]) but i thought this was kinda overboard on constantly checking the history list. Instead, I settled for finding the random which was less compute power and would create a more readable approach. Using a set since adding the same string would still result in the set size being 1. So once I find the randomPlayerId, I would then save this playerId and once I encountered the other playerId (which was the constant since there are only 3 players including custom) I would then use the histories variable to get that constant players first shot and save that.
 
-Terminal 1:
-```
-$ node rock-paper-scissors/player.js 9001 random
-```
+This gave me an edge on random, since random will always shoot random and still potentially losing to constant. Custom once finding the radom will always beat constant meaning that every time it played constant it would be an automatic win.
 
-Terminal 2:
-```
-$ node rock-paper-scissors/player.js 9002 constant
-```
-
-Terminal 3:
-```
-$ node rock-paper-scissors/player.js 9003 custom
-```
-
-Your __main task__ is to work on the custom strategy in `rock-paper-scissors/custom-strategy.js` to modify it so that it will beat the random and constant strategies in a three way match of 1000 iterations.
-
-Your __bonus task__ could be 1 of 2 things:
-
-1. Modify the `player.js` module so that you can start N number of players and they can all play against each other. The crux of the problem is to ensure they all get the same number of turns and will play different players equally over a long enough time range.
-2. Modify the custom strategy to be able to beat two or more other random strategies (not constant) in a 3 way match of 1000 iterations.
+(I attempted the bonus question, my appraoch was to follow round robin. Trying my best not to change the old initialization of the constructor i set the N variable be null if not passed. If passed i would create an N number of ports and if N was odd introduce a BYE to make players evenly play each other. BYE would allow the player to basiaclly wait a round before attempting to play another player. I was going to continue to follow the index of the player and use either % to basiclly wrap back around the amount of players to keep a consistent approach to all players playing each other evenly)
 
 ### Query an Ordered List
-This problem consists of 3 Node.js scripts in the `database-application/` directory. There are 2 HTTP servers and one testing client:
 
-- __database-server.js__ Creates an ordered list of mock data and serves as a simple database made of up a single ordered list media segments.
-- __application-server.js__ Creates an application server which provides an HTTP API for applications to find media segment for a given point in the media timeline.
-- __perf-test-client.js__ A script which queries the application server to test the performance of the end to end system.
+The main hint in this problem was first in the code we are handed the knownLength. On top of that reading the sentence ordered list gave me right away divide-conquer. Since we always started at 0 and no other checks, index++ I knew any approach would be better than this one.
 
-The database is a single, simple, ordered list. Each item in the list represents a media segment of a full feature length movie. The segments have the data shape of { start:timestamp, end:timestamp, duration:integer }. The database ingests 2 thousand of them ordered from lowest start time to highest start time. Clients will need to query the application server for a media segment which contains media for a given timestamp. The application server locates the media segment for the given timestamp using the simple *get by index* operation the database server makes available.
-
-To get started, open 3 terminal instances and execute each script in each one.
-
-Terminal 1 (start the database server first):
-```
-$ node database-application/database-server.js
-```
-
-Terminal 2 (start the application server second):
-```
-$ node database-application/application-server.js
-```
-
-Terminal 3 (run the performance test script last, and expect this to take long time):
-```
-$ node database-application/perf-test-client.js
-```
-
-Your __main task__ is to optimize the query in the application server to improve the query performance as much as you can (without modifying the database-server.js file). The application server is currently using a brute force approach, which you can probably replace with something much better.
-
-Your __bonus task__ is to increase the number of items in the ordered list in the database server and add data sharding.
-
-## Player Debugging
-Run in the Chrome web browser from a Node.js server.
-
-### Installation
-The only dependency is the Node.js runtime.
-
-From the directory where this archive was unpacked, run:
-
-```
-$ npm install
-```
-
-### Running The Dev Server
-Once you have Node.js, and have run `npm install`, then run the server with:
-
-```
-$ npm start
-```
-
-The URL to access the server can be found in the command line output from running `npm start`.
+My first idea was just seeing if checking the middle point would make a difference (middle index is the position above or below and change the starting point of tryNext) (did not). My other idea was to confirm that the time stamp was even in the list. (Not sure if this was necessary since it was 2000 always) but wanted to mimic a real approach to save some time and avoid any unnecessary calls. Lastly, dividing down the middle every call and attempting to get as close as possible to the index was the best approach. Reduced all the unnecessary calls. My main struggle with the problem was I kept returning result from data rather than the whole resolved data. Causing my console to constantly tell me false for all the positions it was looking for. Once i got the binary search down i would simply always either return the inded of the matched posiiton or an index close enough to actually confirm its inside the list. Using this approach and comparing it to the original dropped it significatly. But honeslty I wanted to try my best to make it even easier and readable so I basically created another approach. This approach was still on the brute forcey side but still better than starting from zero and ++ through the list. Instead I stepped through the list 250 times. Checked that index and if the posiiton was above this do another 250 steps until the positon was below that and starting there. binary search still blew this out the water but wanted to attempt to make something super super readable at first glace.
 
 ### Memory Leak Problem
-We have a confirmed memory leak in a hypothetical video player. We've been able to isolate the problem to our MP4 segment loading pipeline. So, we have extracted the pipeline to this test in ./memory-leak.js. After logging out the memory consumption in the Chrome browser we have noticed that the buffer size remains nearly constant, but the overall memory consumption of the browser runtime continues to grow out of control.
 
-Your task is to make a change to the code in ./memory-leak.js to fix this memory leak and hold the overall memory consumption more consistent.
-
-Open the developer tools and observe the console as you run this test to see the results.
-
-__!!NOTE!!__
-
-This test only works in Chrome because of the use of the performance.memory API.
-
-### Buggy Bandwidth Test
-The second problem is a simple video player created to test local bandwidth and playback conditions. It seems to work fine for the most part, but has a bug for you to solve.
-
-If you play the video, and then manually ramp it up to the highest quality level ([9]1920x1080 / 1.074 MB per second) then the video will eventually freeze. There is an error logged out in the inspector console which might lend a clue to the root cause.
-
-Your job is to find the bug and fix it so that the test video will play all the way through to the end without freezing.
-
-# Take-Home-Assignment-Interview
+I took a ton of time understanding what things meant. I had zero to no clue about what any of the code consisted of but i wanted to take the opportunity to put myself in an uncomfortable spot to see if my JS expereince can carry me in finding the issue in the code. But doing this was no help since i didnt understand at first what arrayBuffer was and all the other methods were attempting to do. I wrote a ton of comments on this section to basically not only save what i learned but also to jot down any notes or things that can help me better understand the code. Once i grasped what was going on. My mind first looked at the timeout thinking this was an easy solution and to clearTimeout since it was somehow still in the event loop somehow. But this was not the problem instead it was the sneaky reference of the original segment list. When we created var segment = segmentList[index] we were both pointing to the segment needed but also the reference so adding arrayBuffer to segment also updated the referece to segmentList. Creating arrayBuffer on that segment as well in the list. The tricky part was it was hard to catch when reading appendBuffer it looks like it safely removed the segment and removes it from memory. Almost like blocking the old reference from the list. I caught this by simply console logging what the segment list looked like after every iteration and I could see "arrayBuffer" being added to the segment inside of the original segmentList. Which was the cause of memory constantly growing. This is a classic reference problem in JavaScript. So I made a deep copy making sure that any changes made to this deep copy was not changing the old reference. Another approach I saw that worked and probably could go with my current soltion is after every iteration before segmentIndex++ we could segmentList[segmentIndex] = null and completely remove it from the old array as well but I was thinking that if in the future we want to use that segmentList again this would make it impossible.
