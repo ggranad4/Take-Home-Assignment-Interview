@@ -18,7 +18,13 @@ const findRandomChoicePlayer = (playerId) => {
     randomChoicePlayerId = playerId;
   }
 };
-
+const isThisNotRandomPlayer = (playerId) => {
+  return (
+    randomChoicePlayerId &&
+    randomChoicePlayerId !== playerId &&
+    !constantPlayerChoiceOfShot
+  );
+};
 exports.recordShot = (playerId, shot) => {
   if (!histories[playerId]) {
     histories[playerId] = new Set();
@@ -29,8 +35,8 @@ exports.recordShot = (playerId, shot) => {
     findRandomChoicePlayer(playerId);
   }
 
-  if (randomChoicePlayerId !== playerId && !constantPlayerChoiceOfShot) {
-    constantPlayerChoiceOfShot = shot;
+  if (isThisNotRandomPlayer(playerId)) {
+    constantPlayerChoiceOfShot = [...histories[playerId]][0];
   }
 };
 
