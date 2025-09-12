@@ -7,29 +7,36 @@ const counterMoves = {
   paper: "scissors",
 };
 const histories = {};
-let randomPlayerId = "";
-let constantPlayerChoice = "";
-const findRandomPlayer = (playerId) => {
+let randomChoicePlayerId = "";
+let constantPlayerChoiceOfShot = "";
+
+/**
+ * @param {string} playerId - The ID of the player to check
+ */
+const findRandomChoicePlayer = (playerId) => {
   if (histories[playerId].size > 1) {
-    randomPlayerId = playerId;
+    randomChoicePlayerId = playerId;
   }
 };
 
 exports.recordShot = (playerId, shot) => {
   if (!histories[playerId]) {
     histories[playerId] = new Set();
-    histories[playerId].add(shot);
   }
   histories[playerId].add(shot);
-  findRandomPlayer(playerId, shot);
-  if (randomPlayerId !== playerId) {
-    constantPlayerChoice = shot;
+
+  if (!randomChoicePlayerId) {
+    findRandomChoicePlayer(playerId);
+  }
+
+  if (randomChoicePlayerId !== playerId && !constantPlayerChoiceOfShot) {
+    constantPlayerChoiceOfShot = shot;
   }
 };
 
 exports.makeShot = (playerId) => {
-  if (randomPlayerId !== playerId && constantPlayerChoice) {
-    return counterMoves[constantPlayerChoice];
+  if (randomChoicePlayerId !== playerId && constantPlayerChoiceOfShot) {
+    return counterMoves[constantPlayerChoiceOfShot];
   }
   return shots[Math.floor(Math.random() * shots.length)];
 };
