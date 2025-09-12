@@ -69,7 +69,6 @@ async function binarySearch(startIndex, endIndex, position) {
   const data = await returnDatabaseRequest(middleIndex);
   const { result } = data;
   if (!result) {
-    console.log("Did i hit here???", middleIndex);
     return null;
   }
   if (position >= result.start && position <= result.end) {
@@ -91,7 +90,6 @@ async function findSegment(res, knownLength, position) {
   async function tryNext(index) {
     const data = await returnDatabaseRequest(index);
     const { result } = data;
-    console.log("I AM HERE", result);
     if (!result) {
       return null;
     } // end of list
