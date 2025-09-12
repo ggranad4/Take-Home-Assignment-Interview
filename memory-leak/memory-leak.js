@@ -2,6 +2,20 @@
   // The media playlist URL.
   // See the HLS (HTTP Live Streaming) specification for more info:
   //   https://tools.ietf.org/html/rfc8216#section-4.1
+  // this contains mp4
+  // #EXT-X-TARGETDURATION:8 this tells me how long eaach one is in the playlist. Segment.mp4x
+  // #EXT-X-MAP:URI="map.mp4" this is init segment and is needed in order to interprey the segments
+  // #EXTINF:8.008, basically letting us know when its a segment and the last section is parsed as the duration
+  // then uses the next line to load in the segment replacing the vod.m3u8 with this line which gets us back
+  // the arrayBuffer. Reason for the responseType. I removed this and tested it on chrome.
+  // chrome still interprests it as a bufferArray but im assuming its used when it thinks its going to be a text
+  // return type? Maybe some browsers dont know the type and dont know how to return it causing errors.
+  // XMLHttpRequest is basically a fetch looking more closely its supported throughout most browsers compared to fetch
+  // thinking this is probably why its used here? q to ask.
+  // load playlist loads MEDIA_PLAYLIST_URL
+  // load segment loads each of the 000000_000.mp4 lines
+  //
+
   var MEDIA_PLAYLIST_URL =
     "https://lw.bamgrid.com/2.0/hls/vod/bam/ms02/hls/dplus/bao/avc/unenc/8500k/vod.m3u8";
 
@@ -130,8 +144,15 @@
 
       function loadAndBufferSegment() {
         // current segment => {duration, url}
-        var segment = segmentList[currentSegmentIndex];
-        var timeout;
+        // console.log(segmentList)
+        // ^^^ shows that when we do segment.arrayBuffer = arrayBuffer
+        // segmentList still keeps track of the reference meaning that even though we add it to arrayBugger and
+        // buffer and bufferSegment array doing the shift seems like it avoids holding reference but the old list still
+        // keeps reference making a deep copy of the segment will allow us to edit it and avoid editing the old reference
+
+        var segment = JSON.parse(
+          JSON.stringify(segmentList[currentSegmentIndex] ?? null)
+        );
         if (!segment) {
           console.log("Done. No more MP4 segments to play");
           return;
@@ -143,14 +164,13 @@
           segment.arrayBuffer = arrayBuffer;
 
           appendBuffer(segment);
-
+          // can also do segmentList[currentSegmentIndex] = null;
+          // to remove reference instead of doing the deep copy
           currentSegmentIndex++;
-
           // Load a new segment every 2 seconds for this test.
           setTimeout(loadAndBufferSegment, 2000);
         });
       }
-
       loadAndBufferSegment();
     });
   }
